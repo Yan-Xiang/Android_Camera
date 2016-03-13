@@ -4,25 +4,27 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.PixelFormat;
 import android.hardware.Camera;
 import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.io.IOException;
 import java.util.List;
 
 
-public class MainActivity extends Activity implements SensorEventListener {
+public class MainActivity extends Activity implements SurfaceHolder.Callback {
     private String debug = "debug";
     private Long startTime;
     private Handler handler = new Handler();
@@ -35,6 +37,8 @@ public class MainActivity extends Activity implements SensorEventListener {
     private ImageView takepictureimg;
     private Button takepicturebtn, starecamerabtn, camera_rel;
 
+    SurfaceHolder surfaceHolder;
+    SurfaceView surfaceView1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,7 +53,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         //設定定時要執行的方法
         handler.removeCallbacks(updateTimer);
         //設定Delay的時間
-//        handler.postDelayed(updateTimer, 1000);
+        handler.postDelayed(updateTimer, 1000);
 
 //=========================================================================================
         this.sensorMgr = (SensorManager) this.getSystemService(SENSOR_SERVICE);
@@ -80,7 +84,24 @@ public class MainActivity extends Activity implements SensorEventListener {
             @Override
             public void onClick(View v) {
                 Log.i(debug, "before Camera open");
-                camera = Camera.open();
+                camera=Camera.open();
+                try {
+
+                    Camera.Parameters parameters=camera.getParameters();
+                    parameters.setPictureFormat(PixelFormat.JPEG);
+                    parameters.setPreviewSize(320, 240);
+                    camera.setParameters(parameters);
+                    //設置參數
+                    camera.setPreviewDisplay(surfaceHolder);
+//                    //鏡頭的方向和手機相差90度，所以要轉向
+//                    //camera.setDisplayOrientation(90);
+//                    //攝影頭畫面顯示在Surface上
+                    camera.startPreview();
+                }
+                catch (IOException e) {
+//
+                    e.printStackTrace();
+                }
                 Log.i(debug, "after Camera open");
             }
         });
@@ -88,9 +109,23 @@ public class MainActivity extends Activity implements SensorEventListener {
             @Override
             public void onClick(View v) {
                 Log.i(debug, "before Camera take picture");
+//
+//                camera.takePicture(null, null, null,
+//                    new Camera.PictureCallback() {
+//                    @Override
+//                    public void onPictureTaken(byte[] data, Camera camera) {
+//                        Log.i(debug, "before startPreview");
+//                        Bitmap bm = BitmapFactory.decodeByteArray(data, 0, data.length);
+//                        takepictureimg.setImageBitmap(bm);
+////                        camera.startPreview();
+//                        Log.i(debug, "after set img");
+//                    }
+//                });
+
 
                 camera.takePicture(null, null, jpeg);
-                camera.autoFocus(cb);
+//                camera.autoFocus(afcb);
+//                camera.autoFocus(cb);
                 Log.i(debug, "after Camera take picture");
 
             }
@@ -104,32 +139,35 @@ public class MainActivity extends Activity implements SensorEventListener {
                 Log.i(debug, "after Camera release");
             }
         });
+//===================================================================
+
+        surfaceView1=(SurfaceView)findViewById(R.id.surfaceView1);
+
+        surfaceHolder=surfaceView1.getHolder();
+        surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+        surfaceHolder.addCallback(this);
 
     }
-    Camera.PictureCallback jpeg = new Camera.PictureCallback() {
-
-        @Override
-        public void onPictureTaken(byte[] data, Camera camera) {
-            Log.i(debug, "before startPreview");
-
-            Bitmap bm = BitmapFactory.decodeByteArray(data, 0, data.length);
-            takepictureimg.setImageBitmap(bm);
-            camera.startPreview();
-
-            Log.i(debug, "after set img");
-        }
-
-    };
-    Camera.AutoFocusCallback cb = new Camera.AutoFocusCallback(){
-        @Override
-        public void onAutoFocus(boolean success, Camera camera) {
-            Log.i(debug, "before Camera AutoFocus     success? "+success);
-            if (success) {
-            camera.takePicture(null, null, jpeg);
-                Log.i(debug, "after Camera AutoFocus");
-
-            }
-    }};
+//    Camera.PictureCallback jpeg = new Camera.PictureCallback() {
+//        @Override
+//        public void onPictureTaken(byte[] data, Camera camera) {
+//            Log.i(debug, "before startPreview");
+//            Bitmap bm = BitmapFactory.decodeByteArray(data, 0, data.length);
+//            takepictureimg.setImageBitmap(bm);
+//            camera.startPreview();
+//            Log.i(debug, "after set img");
+//        }
+//    };
+//    Camera.AutoFocusCallback cb = new Camera.AutoFocusCallback(){
+//        @Override
+//        public void onAutoFocus(boolean success, Camera camera) {
+//            Log.i(debug, "before Camera AutoFocus     success? "+success);
+//            if (success) {
+//            camera.takePicture(null, null, jpeg);
+//                Log.i(debug, "after Camera AutoFocus");
+//
+//            }
+//    }};
 
 //=====================================================================================
     private Button.OnClickListener startClickListener = new Button.OnClickListener() {
@@ -165,7 +203,12 @@ public class MainActivity extends Activity implements SensorEventListener {
             //計算目前已過秒數
             Long seconds = (spentTime / 1000) % 60;
             time.setText(minius + ":" + seconds);
+
+            //自動對焦
+//            camera.autoFocus(afcb);
+            camera.takePicture(null, null, jpeg);
             handler.postDelayed(this, 1000);
+
         }
     };
 
@@ -212,26 +255,104 @@ public class MainActivity extends Activity implements SensorEventListener {
 //            this.sensorMgr.unregisterListener(this, this.sensor);
         }
     }
+    Camera.PictureCallback jpeg =new Camera.PictureCallback(){
+
+        public void onPictureTaken(byte[] data, Camera camera) {
+
+            Bitmap bmp=BitmapFactory.decodeByteArray(data, 0, data.length);
+            //byte數组轉換成Bitmap
+            takepictureimg.setImageBitmap(bmp);
+            //拍下圖片顯示在下面的ImageView裡
+//            FileOutputStream fop;
+//            try {
+//                fop=new FileOutputStream("/sdcard/dd.jpg");
+//                //實例化FileOutputStream，參數是生成路徑
+//                bmp.compress(Bitmap.CompressFormat.JPEG, 100, fop);
+//                //壓缩bitmap寫進outputStream 參數：輸出格式  輸出質量  目標OutputStream
+//                //格式可以為jpg,png,jpg不能存儲透明
+//                fop.close();
+//                System.out.println("拍照成功");
+//                //關閉流
+//            } catch (FileNotFoundException e) {
+//
+//                e.printStackTrace();
+//                System.out.println("FileNotFoundException");
+//
+//            } catch (IOException e) {
+//
+//                e.printStackTrace();
+//                System.out.println("IOException");
+//            }
+            camera.startPreview();
+            //需要手動重新startPreview，否則停在拍下的瞬間
+        }
+
+    };
+    //自動對焦監聽式
+    Camera.AutoFocusCallback afcb= new Camera.AutoFocusCallback(){
+
+        public void onAutoFocus(boolean success, Camera camera) {
+
+//            if(success){
+                //對焦成功才拍照
+                camera.takePicture(null, null, jpeg);
+//            }
+        }
+
+
+    };
     @Override
-    public void onSensorChanged(SensorEvent event) {
-        // 方位角，就是手機頭的朝向，北為0，東為90，餘類推，實做結果不準
-        // float val = event.values[0];
-        // 南北向旋轉，手機水平放置螢幕朝向上（0）、頭朝上（-90）
-        // 頭向下（90）、水平放置螢幕朝向下（-180/180）
-        // float val = event.values[1];
-        // 東西向旋轉，手機水平放置螢幕朝向上（0）、向右翻螢幕朝右（-90）
-        // 向左翻螢幕朝左（90）、水平放置螢幕朝向下（0）
-        // float val = event.values[2];
-//        this.insert2Tv("方位角：" + event.values[0] + "南北向：" + event.values[1]
-//                + "東西向：" + event.values[2]);
-        Log.i(debug, "方位角：" + event.values[0] + "  南北向：" + event.values[1] + "  東西向：" + event.values[2]);
+    public void surfaceCreated(SurfaceHolder holder) {
+        camera=Camera.open();
+        try {
+
+            Camera.Parameters parameters=camera.getParameters();
+            parameters.setPictureFormat(PixelFormat.JPEG);
+            parameters.setPreviewSize(320, 240);
+            camera.setParameters(parameters);
+            //設置參數
+            camera.setPreviewDisplay(surfaceHolder);
+            //鏡頭的方向和手機相差90度，所以要轉向
+            //camera.setDisplayOrientation(90);
+            //攝影頭畫面顯示在Surface上
+            camera.startPreview();
+        } catch (IOException e) {
+
+            e.printStackTrace();
+        }
     }
 
-
     @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
 
     }
+
+    @Override
+    public void surfaceDestroyed(SurfaceHolder holder) {
+        camera.stopPreview();
+        //關閉預覽
+        camera.release();
+    }
+//    @Override
+//    public void onSensorChanged(SensorEvent event) {
+//        // 方位角，就是手機頭的朝向，北為0，東為90，餘類推，實做結果不準
+//        // float val = event.values[0];
+//        // 南北向旋轉，手機水平放置螢幕朝向上（0）、頭朝上（-90）
+//        // 頭向下（90）、水平放置螢幕朝向下（-180/180）
+//        // float val = event.values[1];
+//        // 東西向旋轉，手機水平放置螢幕朝向上（0）、向右翻螢幕朝右（-90）
+//        // 向左翻螢幕朝左（90）、水平放置螢幕朝向下（0）
+//        // float val = event.values[2];
+////        this.insert2Tv("方位角：" + event.values[0] + "南北向：" + event.values[1]
+////                + "東西向：" + event.values[2]);
+//        Log.i(debug, "方位角：" + event.values[0] + "  南北向：" + event.values[1] + "  東西向：" + event.values[2]);
+//    }
+//
+//
+//    @Override
+//    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+//
+//    }
 
 
 
