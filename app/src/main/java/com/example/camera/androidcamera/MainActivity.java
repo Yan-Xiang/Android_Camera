@@ -1,6 +1,7 @@
 package com.example.camera.androidcamera;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -11,6 +12,7 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SurfaceHolder;
@@ -18,7 +20,15 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import org.opencv.android.BaseLoaderCallback;
+import org.opencv.android.LoaderCallbackInterface;
+import org.opencv.android.OpenCVLoader;
+import org.opencv.android.Utils;
+import org.opencv.core.Mat;
 
 import java.io.IOException;
 import java.util.List;
@@ -31,21 +41,38 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
 
     private SensorManager sensorMgr;
     private Sensor sensor;
-    private TextView tv;
     private Button starback, stopback;
     private Camera camera;
     private ImageView takepictureimg;
     private Button takepicturebtn, starecamerabtn, camera_rel;
-
+    private SeekBar seekBar1, seekBar2, seekBar3;
+    private TextView showseekbar1, showseekbar2, showseekbar3;
+    private TextView bar_title1, bar_title2, bar_title3;
     SurfaceHolder surfaceHolder;
     SurfaceView surfaceView1;
+
+    int HSVs, G7_C, G11_C;
+    private TextView result;
+    private int barvalue1, barvalue2, barvalue3;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Log.i(debug, "onCreate");
-
+        seekBar1 = (SeekBar) findViewById(R.id.seekBar);
+        seekBar1.setOnSeekBarChangeListener(seekbar);
+        seekBar2 = (SeekBar) findViewById(R.id.seekBar2);
+        seekBar2.setOnSeekBarChangeListener(seekbar);
+        seekBar3 = (SeekBar) findViewById(R.id.seekBar3);
+        seekBar3.setOnSeekBarChangeListener(seekbar);
+        showseekbar1 = (TextView)findViewById(R.id.showseekbar1);
+        showseekbar2 = (TextView)findViewById(R.id.showseekbar2);
+        showseekbar3 = (TextView)findViewById(R.id.showseekbar3);
+        bar_title1 = (TextView)findViewById(R.id.bar_title1);
+        bar_title2 = (TextView)findViewById(R.id.bar_title2);
+        bar_title3 = (TextView)findViewById(R.id.bar_title3);
 
 
         //取得目前時間
@@ -53,15 +80,14 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
         //設定定時要執行的方法
         handler.removeCallbacks(updateTimer);
         //設定Delay的時間
-        handler.postDelayed(updateTimer, 1000);
+        handler.postDelayed(updateTimer, 333);
 
 //=========================================================================================
         this.sensorMgr = (SensorManager) this.getSystemService(SENSOR_SERVICE);
         List<Sensor> list = this.sensorMgr.getSensorList(Sensor.TYPE_ORIENTATION);
         if (list.isEmpty()) {
             Log.i(debug, "不支援傾斜感應器");
-        }
-        else {
+        } else {
             this.sensor = list.get(0);
             Log.i(debug, "取得傾斜感應器：" + this.sensor.getName());
         }
@@ -84,10 +110,10 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
             @Override
             public void onClick(View v) {
                 Log.i(debug, "before Camera open");
-                camera=Camera.open();
+                camera = Camera.open();
                 try {
 
-                    Camera.Parameters parameters=camera.getParameters();
+                    Camera.Parameters parameters = camera.getParameters();
                     parameters.setPictureFormat(PixelFormat.JPEG);
                     parameters.setPreviewSize(320, 240);
                     camera.setParameters(parameters);
@@ -97,8 +123,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
 //                    //camera.setDisplayOrientation(90);
 //                    //攝影頭畫面顯示在Surface上
                     camera.startPreview();
-                }
-                catch (IOException e) {
+                } catch (IOException e) {
 //
                     e.printStackTrace();
                 }
@@ -140,10 +165,10 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
             }
         });
 //===================================================================
+        result = (TextView) findViewById(R.id.result);
+        surfaceView1 = (SurfaceView) findViewById(R.id.surfaceView1);
 
-        surfaceView1=(SurfaceView)findViewById(R.id.surfaceView1);
-
-        surfaceHolder=surfaceView1.getHolder();
+        surfaceHolder = surfaceView1.getHolder();
         surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         surfaceHolder.addCallback(this);
 
@@ -169,7 +194,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
 //            }
 //    }};
 
-//=====================================================================================
+    //=====================================================================================
     private Button.OnClickListener startClickListener = new Button.OnClickListener() {
         public void onClick(View arg0) {
             Log.i(debug, "start");
@@ -191,6 +216,36 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
         }
     };
 
+    private SeekBar.OnSeekBarChangeListener seekbar = new SeekBar.OnSeekBarChangeListener() {
+
+        @Override
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            //SeekBar改變時做的動作
+            String s= String.valueOf(progress);
+            if (seekBar==seekBar1) {
+                showseekbar1.setText(s);
+                barvalue1 = progress;
+            }else if (seekBar==seekBar2) {
+                showseekbar2.setText(s);
+                barvalue2 = progress;
+            }else if (seekBar==seekBar2) {
+                showseekbar3.setText(s);
+                barvalue3 = progress;
+            }
+
+
+        }
+
+        @Override
+        public void onStartTrackingTouch(SeekBar seekBar) {
+
+        }
+
+        @Override
+        public void onStopTrackingTouch(SeekBar seekBar) {
+        }
+    };
+
 
     //固定要執行的方法
     private Runnable updateTimer = new Runnable() {
@@ -206,8 +261,13 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
 
             //自動對焦
 //            camera.autoFocus(afcb);
-            camera.takePicture(null, null, jpeg);
-            handler.postDelayed(this, 1000);
+            try {
+                camera.takePicture(null, null, jpeg);
+            } catch (Exception e ) {
+                camera.release();
+            }
+
+            handler.postDelayed(this,333);
 
         }
     };
@@ -234,20 +294,42 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
         return super.onOptionsItemSelected(item);
     }
 
+    private BaseLoaderCallback mOpenCVCallBack = new BaseLoaderCallback(this) {
+        @Override
+        public void onManagerConnected(int status) {
+            switch (status) {
+                case LoaderCallbackInterface.SUCCESS: {
+                    Log.i(debug, "OpenCV loaded successfully");
+//                    mOpenCvCameraView.enableView();
+//                    mOpenCvCameraView.setOnTouchListener(MainActivity.this);
+                }
+                break;
+                default: {
+                    super.onManagerConnected(status);
+                }
+                break;
+            }
+        }
+    };
 
     @Override
     protected void onResume() {
         super.onResume();
         if (this.sensor != null) {
 //            this.insert2Tv("registerListener...");
+            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_11, this, mOpenCVCallBack);
             Log.i(debug, "registerListener...");
 
 //            this.sensorMgr.registerListener(this, this.sensor, SensorManager.SENSOR_DELAY_UI);
         }
     }
+
     @Override
     protected void onPause() {
         super.onPause();
+        camera.stopPreview();
+        //關閉預覽
+        camera.release();
         if (this.sensor != null) {
 //            this.insert2Tv("unregisterListener...");
             Log.i(debug, "unregisterListener...");
@@ -255,65 +337,85 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
 //            this.sensorMgr.unregisterListener(this, this.sensor);
         }
     }
-    Camera.PictureCallback jpeg =new Camera.PictureCallback(){
+    public void onDestroy() {
+        super.onDestroy();
+        camera.stopPreview();
+        //關閉預覽
+        camera.release();
+    }
+
+    Camera.PictureCallback jpeg = new Camera.PictureCallback() {
 
         public void onPictureTaken(byte[] data, Camera camera) {
 
-            Bitmap bmp=BitmapFactory.decodeByteArray(data, 0, data.length);
+            Bitmap bmp = BitmapFactory.decodeByteArray(data, 0, data.length);
             //byte數组轉換成Bitmap
             takepictureimg.setImageBitmap(bmp);
             //拍下圖片顯示在下面的ImageView裡
-//            FileOutputStream fop;
-//            try {
-//                fop=new FileOutputStream("/sdcard/dd.jpg");
-//                //實例化FileOutputStream，參數是生成路徑
-//                bmp.compress(Bitmap.CompressFormat.JPEG, 100, fop);
-//                //壓缩bitmap寫進outputStream 參數：輸出格式  輸出質量  目標OutputStream
-//                //格式可以為jpg,png,jpg不能存儲透明
-//                fop.close();
-//                System.out.println("拍照成功");
-//                //關閉流
-//            } catch (FileNotFoundException e) {
-//
-//                e.printStackTrace();
-//                System.out.println("FileNotFoundException");
-//
-//            } catch (IOException e) {
-//
-//                e.printStackTrace();
-//                System.out.println("IOException");
-//            }
+            Mat mRgba = new Mat();
+            Utils.bitmapToMat(bmp, mRgba);
+
+            Mat img = new Mat();
+//            Imgproc.resize(mRgba, img, new Size(320, 240));
+            Mat halfimg = mainimageprocess.get_halfimg(mRgba, 0);
+
+            Mat hsv = mainimageprocess.RGB2HSV(halfimg);
+            hsv = mainimageprocess.get_HSV_s(hsv);
+
+            HSVs = mainimageprocess.get_HSVs_points_value(hsv);
+            G7_C = mainimageprocess.get_G7_C80100_points_value(halfimg);
+            G11_C = mainimageprocess.get_G11_C80100_points_value(halfimg);
+            result.setText(String.valueOf(HSVs)+"  "+String.valueOf(G7_C)+"  "+String.valueOf(G11_C));
+            if (HSVs > 20000) {
+                Context context1 = getApplication();
+                CharSequence text1 = String.valueOf(HSVs)+"  "+String.valueOf(G7_C)+"  "+String.valueOf(G11_C);      //設定顯示的訊息
+                int duration1 = Toast.LENGTH_SHORT;   //設定訊息停留長短
+                Toast toast1 = Toast.makeText(context1, text1, duration1); //建立物件
+                toast1.setGravity(Gravity.TOP | Gravity.RIGHT, 0, 0);
+                toast1.show();
+            }
+
+
             camera.startPreview();
             //需要手動重新startPreview，否則停在拍下的瞬間
         }
 
     };
     //自動對焦監聽式
-    Camera.AutoFocusCallback afcb= new Camera.AutoFocusCallback(){
+    Camera.AutoFocusCallback afcb = new Camera.AutoFocusCallback() {
 
         public void onAutoFocus(boolean success, Camera camera) {
 
 //            if(success){
-                //對焦成功才拍照
-                camera.takePicture(null, null, jpeg);
+            //對焦成功才拍照
+            camera.takePicture(null, null, jpeg);
 //            }
         }
 
 
     };
+
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
-        camera=Camera.open();
+        camera = Camera.open();
         try {
 
-            Camera.Parameters parameters=camera.getParameters();
+            Camera.Parameters parameters = camera.getParameters();
             parameters.setPictureFormat(PixelFormat.JPEG);
+//            parameters.setFocusMode("auto");
             parameters.setPreviewSize(320, 240);
+            parameters.setPictureSize(320, 240);
+
+            List<String> allFocus = parameters.getSupportedFocusModes();
+            if(allFocus.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)){
+                parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+                Log.i(debug, "have CONTINUOUS_FOCUS");
+            }
             camera.setParameters(parameters);
             //設置參數
             camera.setPreviewDisplay(surfaceHolder);
             //鏡頭的方向和手機相差90度，所以要轉向
-            //camera.setDisplayOrientation(90);
+//            camera.setDisplayOrientation(90);
             //攝影頭畫面顯示在Surface上
             camera.startPreview();
         } catch (IOException e) {
@@ -324,7 +426,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-
+        Log.i(debug, "surface width: " + width + "  height: " + height);
     }
 
     @Override
@@ -353,7 +455,6 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback {
 //    public void onAccuracyChanged(Sensor sensor, int accuracy) {
 //
 //    }
-
 
 
 }
