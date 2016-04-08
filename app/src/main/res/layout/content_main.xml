@@ -94,6 +94,68 @@
             android:layout_width="640dp"
             android:layout_height="480dp"
             android:id="@+id/takeaimg" />
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="復原"
+                android:id="@+id/clear" />
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="HSV_s"
+                android:id="@+id/hsv_s_btn" />
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="G7_C"
+                android:id="@+id/G7_C_btn" />
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="G11_C"
+                android:id="@+id/G11_C_btn" />
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="body"
+                android:id="@+id/bodybtn" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="去小石頭"
+                android:id="@+id/stone" />
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="偵測線"
+                android:id="@+id/linebtn" />
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="偵測線2"
+                android:id="@+id/linebtn2" />
+
+        </LinearLayout>
     </LinearLayout>
 
     <LinearLayout

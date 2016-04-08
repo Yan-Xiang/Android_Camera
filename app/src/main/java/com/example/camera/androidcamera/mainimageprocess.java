@@ -138,10 +138,43 @@ public class mainimageprocess {
         Core.inRange(cr, new Scalar(avg_cr - skinRange), new Scalar(avg_cr + skinRange), cr_mask);
         Core.inRange(cb, new Scalar(avg_cb - skinRange), new Scalar(avg_cb + skinRange), cb_mask);
 
+        Imgproc.erode(cr_mask, cr_mask, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(4, 20)), new Point(-1, -1), 1);
+        Imgproc.dilate(cr_mask, cr_mask, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(4, 20)), new Point(-1, -1), 1);
+        Imgproc.erode(cb_mask, cb_mask, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(4, 20)), new Point(-1, -1), 1);
+        Imgproc.dilate(cb_mask, cb_mask, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(4, 20)), new Point(-1, -1), 1);
+
         Mat bodyrgb = new Mat();
         img.copyTo(bodyrgb, cr_mask);
         bodyrgb.copyTo(bodyrgb, cb_mask);
         return bodyrgb;
+    }
+    //取膚色區域↓↓↓ 用YCbCr
+    public static int get_body_YCbCr(Mat img) {
+        int avg_cb = 120;//YCbCr顏色空間膚色cb的平均值
+        int avg_cr = 155;//YCbCr顏色空間膚色cr的平均值
+        int skinRange = 22;//YCbCr顏色空間膚色的範圍
+
+
+        Mat hsv = new Mat();
+        Imgproc.cvtColor(img, hsv, Imgproc.COLOR_RGB2YCrCb);
+        Mat cr = new Mat();
+        Mat cb = new Mat();
+        Core.extractChannel(hsv, cr, 1);
+        Core.extractChannel(hsv, cb, 2);
+
+        Mat cr_mask = new Mat();
+        Mat cb_mask = new Mat();
+        Core.inRange(cr, new Scalar(avg_cr - skinRange), new Scalar(avg_cr + skinRange), cr_mask);
+        Core.inRange(cb, new Scalar(avg_cb - skinRange), new Scalar(avg_cb + skinRange), cb_mask);
+
+        Imgproc.erode(cr_mask, cr_mask, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(4, 20)), new Point(-1, -1), 1);
+        Imgproc.dilate(cr_mask, cr_mask, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(4, 20)), new Point(-1, -1), 1);
+        Imgproc.erode(cb_mask, cb_mask, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(4, 20)), new Point(-1, -1), 1);
+        Imgproc.dilate(cb_mask, cb_mask, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(4, 20)), new Point(-1, -1), 1);
+
+        Mat bodygray = new Mat();
+        cr_mask.copyTo(bodygray,cb_mask);
+        return Core.countNonZero(bodygray);
     }
 //----------------------------------------------------------------------------------------------------------
 
@@ -261,10 +294,10 @@ public class mainimageprocess {
         Core.inRange(onelayer, new Scalar(250), new Scalar(255), onelayer);
         Imgproc.erode(onelayer, onelayer, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(10, 10)), new Point(-1, -1), 1);
         Core.inRange(onelayer, new Scalar(253), new Scalar(255), onelayer);
-        Imgproc.dilate(onelayer, onelayer, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(7, 7)), new Point(-1, -1), 3);
-        Core.inRange(onelayer, new Scalar(250), new Scalar(255), onelayer);
-        Imgproc.erode(onelayer, onelayer, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(20, 20)), new Point(-1, -1), 1);
-        Core.inRange(onelayer, new Scalar(253), new Scalar(255), onelayer);
+//        Imgproc.dilate(onelayer, onelayer, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(7, 7)), new Point(-1, -1), 3);
+//        Core.inRange(onelayer, new Scalar(250), new Scalar(255), onelayer);
+//        Imgproc.erode(onelayer, onelayer, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(20, 20)), new Point(-1, -1), 1);
+//        Core.inRange(onelayer, new Scalar(253), new Scalar(255), onelayer);
         Core.bitwise_not(onelayer, onelayer);
 //        Mat output = new Mat();
 //        img.copyTo(output, onelayer);
@@ -277,9 +310,9 @@ public class mainimageprocess {
 
 
     //取線
-    public static Mat HoughLines(Mat img, Mat mask) {
-        int angle_range = 10;
-        int line_count = 2;
+    public static double[][] HoughLines_have_mask(Mat img, int angle_range, Mat mask) {
+        //angle_range = 10;
+
         Mat doimg = new Mat();
         Mat G7_C80100 = new Mat();
 
@@ -289,88 +322,123 @@ public class mainimageprocess {
         G7_C80100.copyTo(doimg, mask);
 
         Mat lines = new Mat();
-        int threshold = 36;//40
-        int minLineSize = 40;
-        int lineGap = 5;//5
+        int threshold = 60;//40
+        int minLineSize = 60;
+        int lineGap = 3;//5
 
         Imgproc.HoughLinesP(doimg, lines, 1, Math.PI / 180, threshold, minLineSize, lineGap);
         Imgproc.cvtColor(doimg, doimg, Imgproc.COLOR_GRAY2BGRA);
         Log.i("m", "new line change and get 斜率=====================================");
-        int[] a = new int[lines.cols()];
-        double[] x1 = new double[lines.cols()];
-        double[] x2 = new double[lines.cols()];
-        double[] y1 = new double[lines.cols()];
-        double[] y2 = new double[lines.cols()];
-        int[] hist = new int[180 / angle_range % 1000 + 1];
+        double[][] all = new double[6][];
+        all[0] = new double[lines.cols()];//x1
+        all[1] = new double[lines.cols()];//y1
+        all[2] = new double[lines.cols()];//x2
+        all[3] = new double[lines.cols()];//y2
+        all[4] = new double[lines.cols()];//斜率
+        all[5] = new double[180 / angle_range % 1000 + 1];//統計
+
         for (int x = 0; x < lines.cols(); x++) {
             double[] vec = lines.get(0, x);
-            x1[x] = vec[0];
-            y1[x] = vec[1];
-            x2[x] = vec[2];
-            y2[x] = vec[3];
-
-            a[x] = (int) (Math.atan2((y1[x] - y2[x]), (x2[x] - x1[x])) * (180 / Math.PI) + 90.0);
-            Log.i("mline a", String.valueOf(a[x]));
-            Log.i("mline hist a", String.valueOf(hist[a[x] / angle_range]));
-            hist[a[x] / angle_range] += 1;
-
-            Point start = new Point(x1[x], y1[x]);
-            Point end = new Point(x2[x], y2[x]);
-
-            Core.line(doimg, start, end, new Scalar(255, 0, 0), 2);
-
+            all[0][x] = vec[0];//x1
+            all[1][x] = vec[1];//y1
+            all[2][x] = vec[2];//x2
+            all[3][x] = vec[3];//y2
+            //a=每條線的斜率
+            all[4][x] = (Math.atan2((all[1][x] - all[3][x]), (all[2][x] - all[0][x])) * (180 / Math.PI) + 90.0);
+            Log.i("mline a", String.valueOf(all[4][x]));
+            Log.i("mline hist a", String.valueOf(all[5][(int) all[4][x] / angle_range]));
+            //作統計分類 依各種範圍斜率數座做統計
+            all[5][(int) all[4][x] / angle_range] += 1;
         }
-//        Log.i("mline a length", String.valueOf(a.length));
-//        for (int x = 0; x < a.length; x++) {
-//            Log.i("mline a", x + "   " + String.valueOf(a[x]));
-//        }
-//        Log.i("mline hist length", String.valueOf(hist.length));
-//        for (int x = 0; x < hist.length; x++) {
-//            Log.i("mline hist", x*angle_range + "   " + String.valueOf(hist[x]));
-//        }
+        return all;
+    }
 
+    public static Mat line(Mat img, double[][] all, int angle_range) {
+
+        int line_count = 2;
         int[] find_which_line = new int[angle_range];
-        for (int i = 0; i < hist.length; i++) {
-            if (hist[i] <= line_count && hist[i] > 0) {
+        for (int i = 0; i < all[5].length; i++) {
+            //hist中的數值在我們想要探討的範圍
+            if (all[5][i] <= line_count && all[5][i] > 0) {
                 for (int x = 0; x < angle_range; x++) {
-                    find_which_line[x] = a.length + 1;
+                    find_which_line[x] = all[4].length + 1;//初始化 fine which line
                 }
-
+                //因hist中以區段做分割 所以要把區段中每個角度都做搜尋
                 for (int x = 0; x < angle_range; x++) {
 //                    find_which_line[x] = Math.abs(Arrays.binarySearch(a, i * angle_range + x));
 //                    Log.i("mline find which line", String.valueOf(i * angle_range + x) + ":  " + x + " " + String.valueOf(Arrays.binarySearch(a, i * angle_range + x)));
-                    for (int j = 0; j < a.length; j++) {
-                        if (a[j] == i * angle_range + x) {
+                    for (int j = 0; j < all[4].length; j++) {
+                        //搜尋a中對應的值 是在第幾個位置
+                        if (all[4][j] == i * angle_range + x) {
                             Log.i("mline find which line", String.valueOf(i * angle_range + x) + ":  " + x + " " + String.valueOf(j));
                             find_which_line[x] = j;
-
-                            Point start = new Point(x1[j], y1[j]);
-                            Point end = new Point(x2[j], y2[j]);
-                            Core.line(doimg, start, end, new Scalar(0, 255, 0), 2);
+                            //畫line
+                            Point start = new Point(all[0][j], all[1][j]);
+                            Point end = new Point(all[2][j], all[3][j]);
+                            Core.line(img, start, end, new Scalar(0, 255, 0), 2);
 //                            Log.i("mline find which line", String.valueOf(find_which_line[x]));
-                            Log.i("mline draw line", String.valueOf(a[j]));
-
+                            Log.i("mline draw line", String.valueOf(all[4][j]));
+//                            Log.i("mline draw line", String.valueOf(all[4][j]));
                         } else {
-                            find_which_line[x] = a.length + 1;
+                            find_which_line[x] = all[4].length + 1;
                         }
                     }
                 }
-
-//                find[1] = Math.abs(Arrays.binarySearch(a, i * 2 + 1));
-//                Log.i("mline find", String.valueOf(Math.abs(Arrays.binarySearch(a, i * 2))));
-
-//                for (int x = 0; x < find_which_line.length; x++) {
-//                    if (find_which_line[x] < a.length) {
-//                        Point start = new Point(x1[find_which_line[x]], y1[find_which_line[x]]);
-//                        Point end = new Point(x2[find_which_line[x]], y2[find_which_line[x]]);
-//                        Core.line(doimg, start, end, new Scalar(0, 255, 0), 2);
-//                        Log.i("mline find which line", String.valueOf(find_which_line[x]));
-//                        Log.i("mline draw line", String.valueOf(a[find_which_line[x]]));
-//                    }
-//                }
             }
         }
-        return doimg;
+        return img;
     }
 
+
+    public static Boolean Have_line( double[][] all) {
+
+        int line_count = 2;
+        Boolean output = false;
+        for (int i = 0; i < all[5].length; i++) {
+            Log.i("mline have line? hist ", String.valueOf(all[5][i]));
+            //hist中的數值在我們想要探討的範圍
+            if (all[5][i] <= line_count && all[5][i] > 0) {
+                output = true;
+            }
+        }
+        Log.i("mline draw have line? ", String.valueOf(output));
+        return output;
+    }
+
+
+
+
+
+
+
+    public static Mat showmodel_HSV_s(Mat img) {
+        Mat hsv = new Mat();
+        Mat rbgcut = new Mat();
+        Mat hsv_s = new Mat();
+
+        Imgproc.cvtColor(img, hsv, Imgproc.COLOR_RGB2HSV);
+        Core.extractChannel(hsv, hsv_s, 1);
+        hsv.release();
+        Mat mask_s = new Mat(hsv_s.size(), CvType.CV_8UC1);
+        Core.inRange(hsv_s, new Scalar(76), new Scalar(255), mask_s);
+        mask_s = hsv_s_erode_dilate(mask_s);
+        img.copyTo(rbgcut, mask_s);
+//        Imgproc.cvtColor(mask_s, rbgcut, Imgproc.COLOR_GRAY2BGRA);
+        mask_s.release();
+        hsv_s.release();
+        return rbgcut;
+    }
+
+    public static Mat showmodel_G7_C(Mat img) {
+        Imgproc.GaussianBlur(img, img, new Size(5, 5), 3, 3);
+        Imgproc.Canny(img, img, 80, 100);
+        Imgproc.cvtColor(img, img, Imgproc.COLOR_GRAY2BGRA);
+        return img;
+    }
+    public static Mat showmodel_G11_C(Mat img) {
+        Imgproc.GaussianBlur(img, img, new Size(11, 11), 3, 3);
+        Imgproc.Canny(img, img, 80, 100);
+        Imgproc.cvtColor(img, img, Imgproc.COLOR_GRAY2BGRA);
+        return img;
+    }
 }
