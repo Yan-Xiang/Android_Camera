@@ -427,31 +427,37 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, Vi
             people = false;
             pillar = false;
             something = false;
-            resultvalue += "people: HSVs>2000 body>3000 body<10000: ";
-            if (HSVs > 2000 && body > 3000 && body < 10000) {
+            if (HSVs > 2000 && body > 1000 && body < 5000 && G7_C > 400 && G7_C < 2000) {
                 people = true;
-                resultvalue += "○\n";
-            }else{ resultvalue += "X\n";}
-            resultvalue += "people: HSVs > 4000 have_line_:         ";
-            if (HSVs > 4000 && HSVs < 15000 && have_line_) {
+                resultvalue += "●";
+            }else{ resultvalue += "X";}
+            resultvalue += " people HSVs >2K body 3K~10K G7_C 400~2K\n";
+            if (HSVs > 3000 && HSVs < 7000 && have_line_) {
                 people = true;
-                resultvalue += "○\n";
-            }else{ resultvalue += "X\n";}
-            resultvalue += "pillar: have_line_ && G11_C > 150:      ";
+                resultvalue += "●";
+            }else{ resultvalue += "X";}
+            resultvalue += " people HSVs > 4000 have_line_\n";
             if (have_line_ && G11_C > 150) {
                 pillar = true;
-                resultvalue += "○\n";
-            }else{ resultvalue += "X\n";}
-            resultvalue += "something: have_line_ && HSVs > 10000:  ";
+                resultvalue += "●";
+            }else{ resultvalue += "X";}
+            resultvalue += " pillar have_line_ && G11_C > 150\n";
+            if ( G11_C > 150 && G11_C < 500 && G7_C < 2000) {
+                pillar = true;
+                resultvalue += "●";
+            }else{ resultvalue += "X";}
+            resultvalue += " pillar G11_C>150 <500 G7_C<2000\n";
             if (have_line_ && HSVs > 10000) {
                 something = true;
-                resultvalue += "○\n";
-            }else{ resultvalue += "X\n";}
-            resultvalue += "something: HSVs > 20000: "               ;
-            if (HSVs > 20000) {
+                resultvalue += "●";
+            }else{ resultvalue += "X";}
+            resultvalue += " someth have_line_ && HSVs > 10000\n";
+            if (HSVs > 10000) {
                 something = true;
-                resultvalue += "○\n";
-            }else{ resultvalue += "X\n";}
+                resultvalue += "●";
+            }else{ resultvalue += "X";}
+            resultvalue += " someth HSVs > 20000\n";
+
 
             result.setText(resultvalue);
             if (people || pillar || something) {
