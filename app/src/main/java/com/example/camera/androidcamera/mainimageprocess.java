@@ -45,7 +45,18 @@ public class mainimageprocess {
         Core.extractChannel(HSV, hsv_s, 1);
         return hsv_s;
     }
-
+    //從HSV提出HSV_S
+    public static Mat get_HSV_h(Mat HSV) {
+        Mat img = new Mat();
+        Core.extractChannel(HSV, img, 0);
+        return img;
+    }
+    //從HSV提出HSV_S
+    public static Mat get_HSV_v(Mat HSV) {
+        Mat img = new Mat();
+        Core.extractChannel(HSV, img, 2);
+        return img;
+    }
     //HSV_S points value
     public static int get_HSVs_points_value(Mat HSV_s) {
         Mat mask_s = new Mat();
@@ -56,19 +67,23 @@ public class mainimageprocess {
     }
 
     //Gauss7 Canny(80,100)
-    public static int get_G7_C80100_points_value(Mat img) {
+    public static Mat G7_C80100_img(Mat halfimg) {
         Mat G7_C80100 = new Mat();
-        Imgproc.GaussianBlur(img, G7_C80100, new Size(5, 5), 3, 3);
+        Imgproc.GaussianBlur(halfimg, G7_C80100, new Size(5, 5), 3, 3);
         Imgproc.Canny(G7_C80100, G7_C80100, 80, 100);
-        return Core.countNonZero(G7_C80100);
+        return G7_C80100;
     }
 
     //Gauss11 Canny(80,100)
-    public static int get_G11_C80100_points_value(Mat img) {
+    public static Mat G11_C80100_img(Mat halfimg) {
         Mat G11_C80100 = new Mat();
-        Imgproc.GaussianBlur(img, G11_C80100, new Size(11, 11), 3, 3);
+        Imgproc.GaussianBlur(halfimg, G11_C80100, new Size(11, 11), 3, 3);
         Imgproc.Canny(G11_C80100, G11_C80100, 80, 100);
-        return Core.countNonZero(G11_C80100);
+        return G11_C80100;
+    }
+
+    public static int get_img_onelayer_value(Mat onelayer_img) {
+        return Core.countNonZero(onelayer_img);
     }
 
     public static Mat RGB_cut_HSVs_return_rgb(Mat one_channel_img) {
@@ -310,16 +325,23 @@ public class mainimageprocess {
 
 
     //取線
-    public static double[][] HoughLines_have_mask(Mat img, int angle_range, Mat mask) {
+    public static double[][] HoughLines_have_mask(Mat img, int angle_range, Mat G7, Mat G11) {
         //angle_range = 10;
 
         Mat doimg = new Mat();
         Mat G7_C80100 = new Mat();
+//        Mat mask = new Mat();
+//        Core.bitwise_xor(G11, G7, mask);
+//        Imgproc.dilate(mask, mask, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(3, 3)), new Point(-1, -1), 1);
+//
+//        Core.bitwise_not(mask, mask);
+//        Imgproc.dilate(mask, mask, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(3, 3)), new Point(-1, -1), 1);
 
-        Imgproc.GaussianBlur(img, G7_C80100, new Size(5, 5), 3, 3);
+        Imgproc.GaussianBlur(img, G7_C80100, new Size(9, 9), 3, 3);
         Imgproc.Canny(G7_C80100, G7_C80100, 80, 100);
         Imgproc.dilate(G7_C80100, G7_C80100, Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(1, 1)), new Point(-1, -1), 1);
-        G7_C80100.copyTo(doimg, mask);
+//        G7_C80100.copyTo(doimg, mask);
+        G7_C80100.copyTo(doimg);
 
         Mat lines = new Mat();
         int threshold = 60;//40

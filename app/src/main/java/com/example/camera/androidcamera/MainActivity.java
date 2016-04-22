@@ -59,7 +59,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, Vi
     Toast toast1 = null;
 
     int model, count = 0;
-    int HSVs, G7_C, G11_C, body;
+    int HSVs, G7_c, G11_c, body;
     Boolean people = false, pillar = false, something = false;
     private TextView result;
     private int barvalue1, barvalue2, barvalue3;
@@ -292,13 +292,19 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, Vi
                     int duration1 = Toast.LENGTH_SHORT;   //設定訊息停留長短
                     if (toast1 == null) {
                         toast1 = Toast.makeText(context1, text1, duration1); //建立物件
+                        toast1.setGravity(Gravity.BOTTOM|Gravity.START, 0, 20);
+                        toast1.setDuration(duration1);
                     }
                     else {
                         toast1.setText(text1);
-                        toast1.setGravity(Gravity.TOP, 0, 100);
-                        toast1.setDuration(duration1);
+//                        toast1.setGravity(Gravity.BOTTOM|Gravity.LEFT, 0, 20);
+//                        toast1.setDuration(duration1);
                     }
                     toast1.show();
+                    people = false;
+                    pillar = false;
+                    something = false;
+                    warning=null;
                 }
                // count = 0;
            // }
@@ -414,49 +420,55 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, Vi
             hsv = mainimageprocess.get_HSV_s(hsv);
 
             HSVs = mainimageprocess.get_HSVs_points_value(hsv);//20000
-            G7_C = mainimageprocess.get_G7_C80100_points_value(halfimg);//500
-            G11_C = mainimageprocess.get_G11_C80100_points_value(halfimg);//150
+            Mat G7_halfimg = mainimageprocess.G7_C80100_img(halfimg);//500
+            Mat G11_halfimg = mainimageprocess.G11_C80100_img(halfimg);//150
+            G7_c = mainimageprocess.get_img_onelayer_value(G7_halfimg);
+            G11_c = mainimageprocess.get_img_onelayer_value(G11_halfimg);
+
             body = mainimageprocess.get_body_YCbCr(halfimg);//3000
 
             Boolean have_line_;
-            have_line_ = mainimageprocess.Have_line(mainimageprocess.HoughLines_have_mask(mRgba, 10, mainimageprocess.clear_tile(mRgba)));
+            have_line_ = mainimageprocess.Have_line(mainimageprocess.HoughLines_have_mask(halfimg, 10, G7_halfimg, G11_halfimg));
             Log.i(debug, "have line? " + have_line_);
-            String resultvalue = String.valueOf(HSVs) + "  " + String.valueOf(G7_C) + "  " + String.valueOf(G11_C) + "  " + String.valueOf(body)
+            String resultvalue = String.valueOf(HSVs) + "  " + String.valueOf(G7_c) + "  " + String.valueOf(G11_c) + "  " + String.valueOf(body)
                     + "\nHave line? " + String.valueOf(have_line_ + "\n");
 
-            people = false;
-            pillar = false;
-            something = false;
-            if (HSVs > 2000 && body > 1000 && body < 5000 && G7_C > 400 && G7_C < 2000) {
+
+            if (HSVs > 100 && HSVs < 10000 && body > 1000 && body < 10000 && G7_c > 300 && G7_c < 1500) {
                 people = true;
                 resultvalue += "●";
             }else{ resultvalue += "X";}
-            resultvalue += " people HSVs >2K body 3K~10K G7_C 400~2K\n";
-            if (HSVs > 3000 && HSVs < 7000 && have_line_) {
+            resultvalue += " people S 100~10K body 1K~10K G7 300~1.5K\n";
+            if (HSVs > 200 && HSVs < 10000 &&  G7_c > 350 && G7_c < 2000 &&  G11_c > 20 && G11_c < 550) {
                 people = true;
                 resultvalue += "●";
             }else{ resultvalue += "X";}
-            resultvalue += " people HSVs > 4000 have_line_\n";
-            if (have_line_ && G11_C > 150) {
+            resultvalue += " people S 200~10K G7 350~2K G11 20~550\n";
+            if (HSVs > 200 && HSVs < 7000 && have_line_) {
+                people = true;
+                resultvalue += "●";
+            }else{ resultvalue += "X";}
+            resultvalue += " people HSVs 200~7K line\n";
+            if (have_line_ && G11_c > 150) {
                 pillar = true;
                 resultvalue += "●";
             }else{ resultvalue += "X";}
-            resultvalue += " pillar have_line_ && G11_C > 150\n";
-            if ( G11_C > 150 && G11_C < 500 && G7_C < 2000) {
+            resultvalue += " pillar line G11_c > 150\n";
+            if ( G11_c > 150 && G11_c < 500 && G7_c < 2000) {
                 pillar = true;
                 resultvalue += "●";
             }else{ resultvalue += "X";}
-            resultvalue += " pillar G11_C>150 <500 G7_C<2000\n";
-            if (have_line_ && HSVs > 10000) {
+            resultvalue += " pillar G11_c 150~500 G7_c<2000\n";
+            if (have_line_ && HSVs > 1000) {
                 something = true;
                 resultvalue += "●";
             }else{ resultvalue += "X";}
-            resultvalue += " someth have_line_ && HSVs > 10000\n";
-            if (HSVs > 10000) {
+            resultvalue += " someth line HSVs > 1000\n";
+            if (HSVs > 2000 && HSVs <15000) {
                 something = true;
                 resultvalue += "●";
             }else{ resultvalue += "X";}
-            resultvalue += " someth HSVs > 20000\n";
+            resultvalue += " someth HSVs 2000~15000\n";
 
 
             result.setText(resultvalue);
@@ -607,11 +619,11 @@ public void onClick(View v) {
     }
     else if (v == G7C_btn) {
         model = 2;
-//        text.setText("G7_C:500");
+//        text.setText("G7_c:500");
     }
     else if (v == G11C_btn) {
         model = 3;
-//        text.setText("G11_C:150");
+//        text.setText("G11_c:150");
     }
 //    else if (v == sobelY) {
 //        model = 4;
@@ -669,10 +681,10 @@ public void onClick(View v) {
         } else if (model == 8) {
 //            double[][] line=new double[][]
 
-            mRgba = mainimageprocess.line(mRgba, mainimageprocess.HoughLines_have_mask(mRgba, 10, mainimageprocess.clear_tile(mRgba)), 10);
-            Boolean have_line_;
-            have_line_ = mainimageprocess.Have_line(mainimageprocess.HoughLines_have_mask(mRgba, 10, mainimageprocess.clear_tile(mRgba)));
-            Log.i(debug, "have line? " + have_line_);
+            mRgba = mainimageprocess.line(mRgba, mainimageprocess.HoughLines_have_mask(mRgba, 10, mainimageprocess.G7_C80100_img(mRgba), mainimageprocess.G11_C80100_img(mRgba)), 10);
+//            Boolean have_line_;
+//            have_line_ = mainimageprocess.Have_line(mainimageprocess.HoughLines_have_mask(mRgba, 10, mainimageprocess.G7_C80100_img(mRgba), mainimageprocess.G11_C80100_img(mRgba));
+//            Log.i(debug, "have line? " + have_line_);
 //            Imgproc.resize(tmp, mRgba, Camerasize);
         }
 //        else if (model == 9) {
