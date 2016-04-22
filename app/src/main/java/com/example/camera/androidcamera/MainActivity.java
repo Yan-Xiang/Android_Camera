@@ -3,7 +3,6 @@ package com.example.camera.androidcamera;
 import android.app.Activity;
 import android.app.Service;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.PixelFormat;
@@ -17,6 +16,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -52,6 +52,8 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, Vi
     private SeekBar seekBar1, seekBar2, seekBar3;
     private TextView showseekbar1, showseekbar2, showseekbar3;
     private TextView bar_title1, bar_title2, bar_title3;
+    private TextView windownON, windownOFF;
+    private TextView peopletext, pillartext, somethingtext;
     SurfaceHolder surfaceHolder;
     SurfaceView surfaceView1;
     private Button hsvs_btn, G7C_btn, G11C_btn, clear, bodybtn, stone, linebtn, linebtn2;
@@ -84,35 +86,42 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, Vi
         bar_title2 = (TextView)findViewById(R.id.bar_title2);
         bar_title3 = (TextView)findViewById(R.id.bar_title3);
 
+        windownOFF = (TextView) findViewById(R.id.windowOFF);
+        windownON = (TextView) findViewById(R.id.windowON);
+
+
+        peopletext = (TextView) findViewById(R.id.peopletext);
+        pillartext = (TextView) findViewById(R.id.pillartext);
+        somethingtext = (TextView) findViewById(R.id.somethingtext);
 
         //取得目前時間
-        startTime = System.currentTimeMillis();
+//        startTime = System.currentTimeMillis();
         //設定定時要執行的方法
 //        handler.removeCallbacks(updateTimer);
         //設定Delay的時間
         handler.postDelayed(updateTimer, 333);
 
 //=========================================================================================
-        this.sensorMgr = (SensorManager) this.getSystemService(SENSOR_SERVICE);
-        List<Sensor> list = this.sensorMgr.getSensorList(Sensor.TYPE_ORIENTATION);
-        if (list.isEmpty()) {
-            Log.i(debug, "不支援傾斜感應器");
-        } else {
-            this.sensor = list.get(0);
-            Log.i(debug, "取得傾斜感應器：" + this.sensor.getName());
-        }
+//        this.sensorMgr = (SensorManager) this.getSystemService(SENSOR_SERVICE);
+//        List<Sensor> list = this.sensorMgr.getSensorList(Sensor.TYPE_ORIENTATION);
+//        if (list.isEmpty()) {
+//            Log.i(debug, "不支援傾斜感應器");
+//        } else {
+//            this.sensor = list.get(0);
+//            Log.i(debug, "取得傾斜感應器：" + this.sensor.getName());
+//        }
 
 //===================================================================================
 
-        starback = (Button) findViewById(R.id.starbackground);
-        stopback = (Button) findViewById(R.id.stopbackground);
-        starback.setOnClickListener(startClickListener);
-        stopback.setOnClickListener(stopClickListener);
+//        starback = (Button) findViewById(R.id.starbackground);
+//        stopback = (Button) findViewById(R.id.stopbackground);
+//        starback.setOnClickListener(startClickListener);
+//        stopback.setOnClickListener(stopClickListener);
 
 //==================================================================================
 
         starecamerabtn = (Button) findViewById(R.id.camerabtn);
-        takepicturebtn = (Button) findViewById(R.id.takepicturebtn);
+//        takepicturebtn = (Button) findViewById(R.id.takepicturebtn);
         camera_rel = (Button) findViewById(R.id.camera_rel);
         takepictureimg = (ImageView) findViewById(R.id.takeaimg);
 
@@ -120,6 +129,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, Vi
             @Override
             public void onClick(View v) {
                 Log.i(debug, "before Camera open");
+                starecamerabtn.setEnabled(false);
                 camera = Camera.open();
                 try {
 
@@ -133,44 +143,49 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, Vi
 //                    //camera.setDisplayOrientation(90);
 //                    //攝影頭畫面顯示在Surface上
                     camera.startPreview();
+                    handler.postDelayed(updateTimer, 333);
                 } catch (IOException e) {
 //
                     e.printStackTrace();
                 }
+                camera_rel.setEnabled(true);
                 Log.i(debug, "after Camera open");
             }
         });
-        takepicturebtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.i(debug, "before Camera take picture");
+//        takepicturebtn.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                Log.i(debug, "before Camera take picture");
+////
+////                camera.takePicture(null, null, null,
+////                    new Camera.PictureCallback() {
+////                    @Override
+////                    public void onPictureTaken(byte[] data, Camera camera) {
+////                        Log.i(debug, "before startPreview");
+////                        Bitmap bm = BitmapFactory.decodeByteArray(data, 0, data.length);
+////                        takepictureimg.setImageBitmap(bm);
+//////                        camera.startPreview();
+////                        Log.i(debug, "after set img");
+////                    }
+////                });
 //
-//                camera.takePicture(null, null, null,
-//                    new Camera.PictureCallback() {
-//                    @Override
-//                    public void onPictureTaken(byte[] data, Camera camera) {
-//                        Log.i(debug, "before startPreview");
-//                        Bitmap bm = BitmapFactory.decodeByteArray(data, 0, data.length);
-//                        takepictureimg.setImageBitmap(bm);
-////                        camera.startPreview();
-//                        Log.i(debug, "after set img");
-//                    }
-//                });
-
-
-                camera.takePicture(null, null, jpeg);
-//                camera.autoFocus(afcb);
-//                camera.autoFocus(cb);
-                Log.i(debug, "after Camera take picture");
-
-            }
-        });
+//
+//                camera.takePicture(null, null, jpeg);
+////                camera.autoFocus(afcb);
+////                camera.autoFocus(cb);
+//                Log.i(debug, "after Camera take picture");
+//
+//            }
+//        });
         camera_rel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Log.i(debug, "before Camera release");
+                camera_rel.setEnabled(false);
+
                 camera.release();
                 camera = null;
+                starecamerabtn.setEnabled(true);
                 Log.i(debug, "after Camera release");
             }
         });
@@ -182,7 +197,49 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, Vi
         surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         surfaceHolder.addCallback(this);
 
+//===========================================================================
+        windownON.setOnTouchListener(window);
+        windownOFF.setOnTouchListener(window);
+
     }
+    View.OnTouchListener window = new View.OnTouchListener() {
+
+        public boolean onTouch(View v, MotionEvent event) {
+            // TODO Auto-generated method stub
+
+            if (v == windownOFF) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        Log.v("TAG", "TextView: ACTION_DOWN" + MotionEvent.ACTION_DOWN);
+//                        surfaceView1.setVisibility(View.INVISIBLE);
+
+                        takepictureimg.setVisibility(View.INVISIBLE);
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        Log.v("TAG", "TextView : ACTION_UP" + MotionEvent.ACTION_UP);
+                        break;
+                    default:
+                        break;
+                }
+            }else if (v == windownON) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        Log.v("TAG", "TextView: ACTION_DOWN" + MotionEvent.ACTION_DOWN);
+//                        surfaceView1.setVisibility(View.VISIBLE);
+                        takepictureimg.setVisibility(View.VISIBLE);
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        Log.v("TAG", "TextView : ACTION_UP" + MotionEvent.ACTION_UP);
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+
+            return false;//注意：return false
+        }
+    };
 //    Camera.PictureCallback jpeg = new Camera.PictureCallback() {
 //        @Override
 //        public void onPictureTaken(byte[] data, Camera camera) {
@@ -205,26 +262,26 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, Vi
 //    }};
 
     //=====================================================================================
-    private Button.OnClickListener startClickListener = new Button.OnClickListener() {
-        public void onClick(View arg0) {
-            Log.i(debug, "start");
-            //啟動服務
-            Intent intent = new Intent(MainActivity.this, backgroundprogram.class);
-            startService(intent);
-            onPause();
-        }
-    };
-
-    private Button.OnClickListener stopClickListener = new Button.OnClickListener() {
-        public void onClick(View arg0) {
-            Log.i(debug, "stop");
-            //停止服務
-            Intent intent = new Intent(MainActivity.this, backgroundprogram.class);
-            stopService(intent);
-            onResume();
-
-        }
-    };
+//    private Button.OnClickListener startClickListener = new Button.OnClickListener() {
+//        public void onClick(View arg0) {
+//            Log.i(debug, "start");
+//            //啟動服務
+//            Intent intent = new Intent(MainActivity.this, backgroundprogram.class);
+//            startService(intent);
+//            onPause();
+//        }
+//    };
+//
+//    private Button.OnClickListener stopClickListener = new Button.OnClickListener() {
+//        public void onClick(View arg0) {
+//            Log.i(debug, "stop");
+//            //停止服務
+//            Intent intent = new Intent(MainActivity.this, backgroundprogram.class);
+//            stopService(intent);
+//            onResume();
+//
+//        }
+//    };
 
     private SeekBar.OnSeekBarChangeListener seekbar = new SeekBar.OnSeekBarChangeListener() {
 
@@ -260,65 +317,80 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, Vi
     //固定要執行的方法
     private Runnable updateTimer = new Runnable() {
         public void run() {
+
             Log.i(debug, "updateTimer run");
             final TextView time = (TextView) findViewById(R.id.timer);
-            Long spentTime = System.currentTimeMillis() - startTime;
-            //計算目前已過分鐘數
-            Long minius = (spentTime / 1000) / 60;
-            //計算目前已過秒數
-            Long seconds = (spentTime / 1000) % 60;
-            time.setText(minius + ":" + seconds);
+//            Long spentTime = System.currentTimeMillis() - startTime;
+//            //計算目前已過分鐘數
+//            Long minius = (spentTime / 1000) / 60;
+//            //計算目前已過秒數
+//            Long seconds = (spentTime / 1000) % 60;
+
 
             //自動對焦
 //            camera.autoFocus(afcb);
           //  if (count >= 30) {//3*s
-                if (people || pillar || something) {
 
-
-                    String warning = new String();
-                    warning += "前方可能有 ";
-                    if (people) {
-                        warning += "人 ";
-                    }
-                    if (pillar) {
-                        warning += "柱子 ";
-                    }
-                    if (something) {
-                        warning += "物品";
-                    }
-
-                    Context context1 = getApplication();
-                    CharSequence text1 = warning;      //設定顯示的訊息
-                    int duration1 = Toast.LENGTH_SHORT;   //設定訊息停留長短
-                    if (toast1 == null) {
-                        toast1 = Toast.makeText(context1, text1, duration1); //建立物件
-                        toast1.setGravity(Gravity.BOTTOM|Gravity.START, 0, 20);
-                        toast1.setDuration(duration1);
-                    }
-                    else {
-                        toast1.setText(text1);
-//                        toast1.setGravity(Gravity.BOTTOM|Gravity.LEFT, 0, 20);
-//                        toast1.setDuration(duration1);
-                    }
-                    toast1.show();
-                    people = false;
-                    pillar = false;
-                    something = false;
-                    warning=null;
-                }
-               // count = 0;
-           // }
-           // count++;
-
-            try {
+//            try {
+            if (camera != null) {
                 camera.takePicture(null, null, jpeg);
-
-            } catch (Exception e ) {
-                camera.release();
             }
 
 
+//            } catch (Exception e ) {
+//                camera.release();
+//            }
 
+            if (people) {
+                peopletext.setTextColor(0xffff0303);
+            } else {
+                peopletext.setTextColor(0xffe2e2e2);
+            }
+            if (pillar) {
+                pillartext.setTextColor(0xffff0303);
+            } else {
+                pillartext.setTextColor(0xffe2e2e2);
+            }
+            if (something) {
+                somethingtext.setTextColor(0xffff0303);
+            } else {
+                somethingtext.setTextColor(0xffe2e2e2);
+            }
+
+            if (people || pillar || something) {
+                String warning = "前方可能有 ";
+                if (people) {
+                    warning += "人 ";
+                }
+                if (pillar) {
+                    warning += "柱子 ";
+                }
+                if (something) {
+                    warning += "物品";
+                }
+
+                Context context1 = getApplication();
+                CharSequence text1 = warning;      //設定顯示的訊息
+                int duration1 = Toast.LENGTH_SHORT;   //設定訊息停留長短
+                if (toast1 == null) {
+                    toast1 = Toast.makeText(context1, text1, duration1); //建立物件
+                    toast1.setGravity(Gravity.BOTTOM|Gravity.START, 0, 20);
+                    toast1.setDuration(duration1);
+                }
+                else {
+                    toast1.setText(text1);
+//                        toast1.setGravity(Gravity.BOTTOM|Gravity.LEFT, 0, 20);
+//                        toast1.setDuration(duration1);
+                }
+                toast1.show();
+//                time.setText(warning);
+
+                warning=null;
+            }
+
+               // count = 0;
+           // }
+           // count++;
 
             handler.postDelayed(this, 333);
 
@@ -370,19 +442,28 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, Vi
         super.onResume();
         if (this.sensor != null) {
 //            this.insert2Tv("registerListener...");
-            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_11, this, mOpenCVCallBack);
+
             Log.i(debug, "registerListener...");
 
 //            this.sensorMgr.registerListener(this, this.sensor, SensorManager.SENSOR_DELAY_UI);
         }
+        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_11, this, mOpenCVCallBack);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        camera.stopPreview();
-        //關閉預覽
-        camera.release();
+        if (handler != null) {
+            Log.i(debug, "removetimer");
+            handler.removeCallbacks(updateTimer);
+        }
+//        if (surfaceView1 != null) {
+//            camera.stopPreview();
+//        }
+        if (camera != null) {
+            //關閉預覽
+            camera.release();
+        }
         if (this.sensor != null) {
 //            this.insert2Tv("unregisterListener...");
             Log.i(debug, "unregisterListener...");
@@ -390,15 +471,22 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, Vi
 //            this.sensorMgr.unregisterListener(this, this.sensor);
         }
     }
-    public void onDestroy() {
-        super.onDestroy();
+    @Override
+    protected void onDestroy() {
+
         if (handler != null) {
+            Log.i(debug, "removetimer");
             handler.removeCallbacks(updateTimer);
         }
+//        if (surfaceView1 != null) {
+//            camera.stopPreview();
+//        }
+        if (camera != null) {
 
-        camera.stopPreview();
-        //關閉預覽
-        camera.release();
+            //關閉預覽
+            camera.release();
+        }
+        super.onDestroy();
     }
 
     Camera.PictureCallback jpeg = new Camera.PictureCallback() {
@@ -433,7 +521,9 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, Vi
             String resultvalue = String.valueOf(HSVs) + "  " + String.valueOf(G7_c) + "  " + String.valueOf(G11_c) + "  " + String.valueOf(body)
                     + "\nHave line? " + String.valueOf(have_line_ + "\n");
 
-
+            people = false;
+            pillar = false;
+            something = false;
             if (HSVs > 100 && HSVs < 10000 && body > 1000 && body < 10000 && G7_c > 300 && G7_c < 1500) {
                 people = true;
                 resultvalue += "●";
@@ -472,28 +562,6 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, Vi
 
 
             result.setText(resultvalue);
-            if (people || pillar || something) {
-                String warning = new String();
-                warning += "前方可能有 ";
-                if (people) {
-                    warning += "人 ";
-                }
-                if (pillar) {
-                    warning += "柱子 ";
-                }
-                if (something) {
-                    warning += "物品";
-                }
-                Context context1 = getApplication();
-                CharSequence text1 = warning;      //設定顯示的訊息
-                int duration1 = Toast.LENGTH_SHORT;   //設定訊息停留長短
-                Toast toast1 = Toast.makeText(context1, text1, duration1); //建立物件
-                toast1.setGravity(Gravity.TOP, 0, 100);
-                toast1.show();
-            }
-
-//            mRgba = mainimageprocess.line(mRgba, mainimageprocess.HoughLines_have_mask(mRgba, 10, mainimageprocess.clear_tile(mRgba)), 10);
-
             mRgba = output(mRgba);
 
             Utils.matToBitmap(mRgba, bmp);
@@ -554,11 +622,20 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, Vi
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
         if (handler != null) {
-            handler.removeCallbacks(updateTimer);
+        Log.i(debug, "removetimer");
+        handler.removeCallbacks(updateTimer);
         }
-        camera.stopPreview();
-        //關閉預覽
-        camera.release();
+
+        if (surfaceView1 != null) {
+            camera.stopPreview();
+        }
+
+        if (camera != null) {
+
+            //關閉預覽
+            camera.release();
+        }
+
     }
 //    @Override
 //    public void onSensorChanged(SensorEvent event) {
