@@ -528,7 +528,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, Vi
                 people = true;
                 resultvalue += "●";
             }else{ resultvalue += "X";}
-            resultvalue += " people S 100~10K body 1K~10K G7 300~1.5K\n";
+            resultvalue += " people S 100~10K bd 1K~10K G7 300~1.5K\n";
             if (HSVs > 200 && HSVs < 10000 &&  G7_c > 350 && G7_c < 2000 &&  G11_c > 20 && G11_c < 550) {
                 people = true;
                 resultvalue += "●";
@@ -543,22 +543,22 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, Vi
                 pillar = true;
                 resultvalue += "●";
             }else{ resultvalue += "X";}
-            resultvalue += " pillar line G11_c > 150\n";
-            if ( G11_c > 150 && G11_c < 500 && G7_c < 2000) {
+            resultvalue += " pillar line G11 > 150\n";
+            if (HSVs < 400 && G11_c > 150 && G11_c < 500 && G7_c < 2000) {
                 pillar = true;
                 resultvalue += "●";
             }else{ resultvalue += "X";}
-            resultvalue += " pillar G11_c 150~500 G7_c<2000\n";
+            resultvalue += " pillar S<400 G11 150~500 G7<2000\n";
             if (have_line_ && HSVs > 1000) {
                 something = true;
                 resultvalue += "●";
             }else{ resultvalue += "X";}
             resultvalue += " someth line HSVs > 1000\n";
-            if (HSVs > 2000 && HSVs <15000) {
+            if (HSVs > 2000 && HSVs <15000 && G11_c > 50 && G11_c < 500) {
                 something = true;
                 resultvalue += "●";
             }else{ resultvalue += "X";}
-            resultvalue += " someth HSVs 2000~15000\n";
+            resultvalue += " someth HSVs 2K~15K G11 50~500\n";
 
 
             result.setText(resultvalue);
