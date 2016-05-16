@@ -661,7 +661,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, Vi
     public void init(){
         clear = (Button) findViewById(R.id.clear);
         clear.setOnClickListener(this);
-
+        clear.setEnabled(false);
         hsvs_btn = (Button) findViewById(R.id.hsv_s_btn);
         hsvs_btn.setOnClickListener(this);
 
@@ -687,19 +687,31 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, Vi
     }
 @Override
 public void onClick(View v) {
+    clear.setEnabled(true);
+    hsvs_btn.setEnabled(true);
+    G7C_btn.setEnabled(true);
+    G11C_btn.setEnabled(true);
+    bodybtn.setEnabled(true);
+    stone.setEnabled(true);
+    linebtn.setEnabled(true);
+    linebtn2.setEnabled(true);
     if (v == clear) {
         model = 0;
+        clear.setEnabled(false);
     }
     else if (v == hsvs_btn) {
         model = 1;
+        hsvs_btn.setEnabled(false);
 //        text.setText("HsV_S:2000");
     }
     else if (v == G7C_btn) {
         model = 2;
+        G7C_btn.setEnabled(false);
 //        text.setText("G7_c:500");
     }
     else if (v == G11C_btn) {
         model = 3;
+        G11C_btn.setEnabled(false);
 //        text.setText("G11_c:150");
     }
 //    else if (v == sobelY) {
@@ -712,18 +724,22 @@ public void onClick(View v) {
 //    }
     else if (v == bodybtn) {
         model = 6;
+        bodybtn.setEnabled(false);
 //        text.setText("boby");
     }
     else if (v == stone) {
         model = 7;
+        stone.setEnabled(false);
 //        text.setText("stone");
     }
     else if (v == linebtn) {
         model = 8;
+        linebtn.setEnabled(false);
 //        text.setText("one line");
     }
     else if (v == linebtn2) {
         model = 9;
+        linebtn2.setEnabled(false);
 //        text.setText("two line");
     }
 
